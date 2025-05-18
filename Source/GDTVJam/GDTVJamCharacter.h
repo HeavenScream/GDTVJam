@@ -44,6 +44,9 @@ class AGDTVJamCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/*//Sphere for skills
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Skills, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* SphereComponent;*/
 public:
 	AGDTVJamCharacter();
 	
@@ -69,7 +72,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UGDTVAbilitySystemComponent* AbilitySystemComponent;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	//class UGDTVAbilitySystemComponent* AbilitySystemComponent;
 };
 
