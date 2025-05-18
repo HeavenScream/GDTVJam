@@ -69,7 +69,7 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UGDTVAbilitySystemComponent* AbilitySystemComponent;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	//class UGDTVAbilitySystemComponent* AbilitySystemComponent;
 };
 

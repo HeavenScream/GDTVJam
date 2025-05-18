@@ -9,7 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "GDTVAbilitySystemComponent.h"
+//#include "GDTVAbilitySystemComponent.h"
 #include "InputActionValue.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -54,7 +54,7 @@ AGDTVJamCharacter::AGDTVJamCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	AbilitySystemComponent = CreateDefaultSubobject<UGDTVAbilitySystemComponent>(TEXT("AblitySystemComponent"));
+	//AbilitySystemComponent = CreateDefaultSubobject<UGDTVAbilitySystemComponent>(TEXT("AblitySystemComponent"));
 }
 
 //////////////////////////////////////////////////////////////////////////

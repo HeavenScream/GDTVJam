@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class GDTVJAM_API UGDTVAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
