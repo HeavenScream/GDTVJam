@@ -44,6 +44,9 @@ class AGDTVJamCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/*//Sphere for skills
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Skills, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* SphereComponent;*/
 public:
 	AGDTVJamCharacter();
 	
