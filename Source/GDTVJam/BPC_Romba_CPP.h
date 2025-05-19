@@ -46,7 +46,7 @@ public:
 	float DormantTime = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true"))
-	float SpeedMultiplier = 1.0f;
+	float SpeedEscapeMultiplier = 1.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true"))
 	bool bEscape = true;

@@ -102,7 +102,7 @@ void ABPC_Romba_CPP::Escape()
 {
 	if (bEscape && bIsEscape)
 	{
-		GetPawn()->AddMovementInput(GetPawn()->GetActorForwardVector(), SpeedMultiplier);
+		GetPawn()->AddMovementInput(GetPawn()->GetActorForwardVector(), SpeedEscapeMultiplier);
 	}
 }
 
