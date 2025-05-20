@@ -25,16 +25,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnableActor")
 	float MaxRoll = 100;
 	
-	UFUNCTION(Blueprintable, Category="SpawnableActor")
-	bool AttemptToSpawn();
-	
-	UPROPERTY(EditDefaultsOnly, Category = "SpawnableActor")
-	TSubclassOf<AActor> SpawnableClass;
-
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnableActor")
 	class UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditDefaultsOnly, Category = "SpawnableActor")
-	class UBoxComponent* BoxComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SpawnableActor")
+	TArray <TSubclassOf<AActor>> SpawnableActorsArray;
 
+	UFUNCTION(BlueprintCallable, Category="SpawnableActor")
+	bool AttemptToSpawn();
+
+	UFUNCTION(BlueprintCallable, Category="SpawnableActor")
+	TSubclassOf<AActor> SelectActorToSpawn(TArray<TSubclassOf<AActor>> spawnableActors);
 };

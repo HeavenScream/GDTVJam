@@ -14,8 +14,7 @@ ABaseSpawnableActor::ABaseSpawnableActor()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	RootComponent = Mesh;
 
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-	BoxComponent->SetupAttachment(Mesh);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 // Called when the game starts or when spawned
@@ -23,7 +22,6 @@ void ABaseSpawnableActor::BeginPlay()
 {
 	Super::BeginPlay();
 	AttemptToSpawn();
-	
 }
 
 bool ABaseSpawnableActor::AttemptToSpawn()
@@ -31,12 +29,17 @@ bool ABaseSpawnableActor::AttemptToSpawn()
 	float Roll = FMath::RandRange(0.f, MaxRoll);
 	if (Roll > chanceToSpawn)
 	{
-		FString SpawnLocation = GetActorLocation().ToCompactString();
-		UE_LOG(LogTemp, Warning, TEXT("Spawned at: %s "), *SpawnLocation);
-		//FActorSpawnParameters spawnParameters;
-		//GetWorld()->SpawnActor(SpawnableClass, GetActorLocation(),GetActorRotation(), spawnParameters);
 		return true;
 	}
 	return false;
 }
 
+TSubclassOf<AActor> ABaseSpawnableActor::SelectActorToSpawn(TArray<TSubclassOf<AActor>> spawnableActors)
+{
+	int ArrayLength = spawnableActors.Num()-1;
+ 
+ 	int selectedItem = FMath::RandRange (0, ArrayLength);
+ 
+ 	TSubclassOf<AActor> ActorToSpawn = spawnableActors[selectedItem];
+ 	return ActorToSpawn;
+}
