@@ -51,7 +51,10 @@ void ARomba_Controller::OnPossess(APawn* InPawn)
 		CollisionDetectionCapsule->OnComponentBeginOverlap.Add(OverlapDelegate);
 	}
 
-
+	if (!GetPawn()->Tags.Contains("Moth"))
+	{
+		GetPawn()->Tags.Add("Moth");
+	}
 }
 
 void ARomba_Controller::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -96,20 +99,24 @@ void ARomba_Controller::StartEscape()
 	{
 		if (!bIsDormant)
 		{
+			if (!GetPawn()->Tags.Contains("Escape"))
+			{
+				GetPawn()->Tags.Add("Escape");
+				GetPawn()->Tags.Remove("Pursuit");
+			}
+
 			bIsEscape = true;
 			bIsPursuit = false;
 
 			StopMovement();
 			UKismetSystemLibrary::K2_ClearTimerHandle(this, PursuitTimer);
 
-			GetWorldTimerManager().SetTimer(EscapeTimer, this, &ARomba_Controller::Escape, 0.02f, true);
+			GetWorldTimerManager().SetTimer(EscapeTimer, this, &ARomba_Controller::Escape, 0.01f, true);
 		}
 		else
 		{
 			bStartEscapeActiv = true;
 			bAttemptedPursuitActiv = false;
-			//bConstantAttemptPursuitActiv = false;
-
 		}
 	}
 }
@@ -140,16 +147,23 @@ void ARomba_Controller::AttemptedPursuit()
 	{
 		if (!bIsDormant)
 		{
-			if (UKismetMathLibrary::RandomBoolWithWeight(PursuitChance / 100.f))
+			if (UKismetMathLibrary::RandomBoolWithWeight(PursuitChance / 100.f) || bStartPursuit)
 			{
+				if (!GetPawn()->Tags.Contains("Pursuit"))
+				{
+					GetPawn()->Tags.Add("Pursuit");
+					GetPawn()->Tags.Remove("Escape");
+				}
+
 				bIsPursuit = true;
 				bIsEscape = false;
+				bStartPursuit = false;
 
 				UKismetSystemLibrary::K2_ClearTimerHandle(this, EscapeTimer);
 
 				FAIMoveRequest MoveRequest;
 				MoveRequest.SetGoalActor(UGameplayStatics::GetPlayerPawn(this, 0));
-				MoveRequest.SetAcceptanceRadius(0.f);
+				MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
 
 				FNavPathSharedPtr NavPath;
 				MoveTo(MoveRequest, &NavPath);
@@ -174,6 +188,11 @@ void ARomba_Controller::StartDormant()
 	{		
 		if (!bIsDormant)
 		{
+			if (!GetPawn()->Tags.Contains("Dormant"))
+			{
+				GetPawn()->Tags.Add("Dormant");
+			}
+
 			bStartEscapeActiv = bIsEscape;
 			bAttemptedPursuitActiv = bIsPursuit;
 
@@ -188,6 +207,11 @@ void ARomba_Controller::StartDormant()
 		}
 		else
 		{
+			if (GetPawn()->Tags.Contains("Dormant"))
+			{
+				GetPawn()->Tags.Remove("Dormant");
+			}
+
 			bIsDormant = false;
 
 			if (bContinueMovingAfterDormant)
@@ -220,6 +244,11 @@ void ARomba_Controller::ActivateTimerBeforeExplosion()
 {
 	if (bExplosionPossible)
 	{
+		if (!GetPawn()->Tags.Contains("Explosion"))
+		{
+			GetPawn()->Tags.Add("Explosion");
+		}
+
 		bIsExplosion = true;
 		GetWorldTimerManager().SetTimer(ExplosionTimer, this, &ARomba_Controller::Explosion, DelayBeforeExplosion, false);
 	}
@@ -240,15 +269,13 @@ void ARomba_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollo
 
 	if (Result.IsSuccess())
 	{
-		if (ExplodeIfCaught)
+		if (ExplodeIfApproached)
 		{
 			Explosion();
 		}
 	}
 	else if (Result.IsFailure())
 	{
-		//PursuitChance = 100.f;
-		//AttemptedPursuit();
+		bStartPursuit = true;
 	}
-
 }

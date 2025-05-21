@@ -43,8 +43,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Dormant duration."))
 	float DormantDuration = 3.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "1.0", ToolTip = ""))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "1.0", ToolTip = "Escape speed multiplier relative to pursuit speed. The pursuit speed depends on the 'Character Movement' settings."))
 	float SpeedEscapeMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "When a player gets into the radius, the bot will be considered to have caught up with the player."))
+	float PursuitEndRadius = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StateMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is it possible to activate the escape state. If false the function 'StartEscape' will not work."))
 	bool bEscapePossible = true;
@@ -73,6 +76,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, the bot will continue with Escape or Pursuit after Dormant."))
 	bool bContinueMovingAfterDormant = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The next call to 'Attempted Pursuit' will start the Pursuit. When pursuit starts, this variable is set to false."))
+	bool bStartPursuit = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ExplosionMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The time (in seconds) after which the 'ActivateTimer Before Explosion' function will call 'Explosion'."))
 	float DelayBeforeExplosion = 10.0f;
 
@@ -80,7 +86,7 @@ public:
 	bool ActivateTimerBeforeExplosionDuringPursuit = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ExplosionMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, when the bot chases the player and catches up with him, the 'Explosion' function will be called."))
-	bool ExplodeIfCaught = true;
+	bool ExplodeIfApproached = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Collision capsule created when moving into a bot. The overlay of this capsule is the trigger for turning."))
 	UPrimitiveComponent* ObstacleDetectionCapsule;
@@ -106,7 +112,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, stops the bot for a certain amount of time. Until the dormant time expires, Escape or Pursuit will not be performed. Related Variables: Dormant Duration, Continue Moving After Dormant, Dormant Possible, Is Dormant."))
 	void StartDormant();
 
-	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, activates a timer after which the 'Explosion' function will be called. Related Variables: Time Before Explosion, Activate Timer Before Explosion During Pursuit, Explode If Caught, Explosion Possible, Is Explosion."))
+	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, activates a timer after which the 'Explosion' function will be called. Related Variables: Time Before Explosion, Activate Timer Before Explosion During Pursuit, Explode If Approached, Explosion Possible, Is Explosion."))
 	void ActivateTimerBeforeExplosion();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Moth", meta = (ToolTip = "When called, by default, logs 'Boom' and destroys the bot. You can override this functionality with 'Event Explosion'.Related Variables: Explosion Possible, Is Explosion."))
