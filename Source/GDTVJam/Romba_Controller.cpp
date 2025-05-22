@@ -68,17 +68,26 @@ void ARomba_Controller::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedCom
 
 	if (!bIsPursuit)
 	{
-
 		if (GetPawn())
 		{
-			FRotator NewRotation(0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f);
-			GetPawn()->SetActorRotation(NewRotation);
-			TArray<AActor*> OverlappingActors;
-			ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+			NewRotation = { 0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f };
 
-			if (!OverlappingActors.IsEmpty())
+			if (TurnSmoothly)
 			{
-				GetWorldTimerManager().SetTimer(AnotherTurnTimer, this, &ARomba_Controller::AnotherTurn, NewTurnRate, false);
+				GetWorldTimerManager().SetTimer(SmoothTurnTimer, this, &ARomba_Controller::SmoothTurn, 0.01f, true);
+			}
+			else
+			{
+				TArray<AActor*> OverlappingActors;
+
+				GetPawn()->SetActorRotation(NewRotation);
+
+				ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+
+				if (!OverlappingActors.IsEmpty())
+				{
+					GetWorldTimerManager().SetTimer(AnotherTurnTimer, this, &ARomba_Controller::AnotherTurn, NewTurnRate, false);
+				}
 			}
 		}
 	}
@@ -90,6 +99,28 @@ void ARomba_Controller::AnotherTurn()
 	{
 		FHitResult DummyHit;
 		OnCapsuleBeginOverlap(nullptr, nullptr, nullptr, 0, false, DummyHit);
+	}
+}
+
+void ARomba_Controller::SmoothTurn()
+{
+	if (UKismetMathLibrary::NearlyEqual_FloatFloat(UKismetMathLibrary::ClampAxis(NewRotation.Yaw), UKismetMathLibrary::ClampAxis(GetPawn()->GetActorRotation().Yaw), 0.01f))
+	{
+		TArray<AActor*> OverlappingActors;
+		ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+
+		if (!OverlappingActors.IsEmpty())
+		{
+			NewRotation = { 0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f };
+		}
+		else
+		{
+			UKismetSystemLibrary::K2_ClearTimerHandle(this, SmoothTurnTimer);
+		}
+	}
+	else
+	{
+		GetPawn()->SetActorRotation(FMath::RInterpTo(GetPawn()->GetActorRotation(), NewRotation, UGameplayStatics::GetWorldDeltaSeconds(this), SmoothTurningSpeed));
 	}
 }
 

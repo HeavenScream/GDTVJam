@@ -16,14 +16,17 @@ class GDTVJAM_API ARomba_Controller : public AAIController
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Relative Obstacle Detection Capsule Location"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Relative Obstacle Detection Capsule Location"))
 	FVector RelativeObstacleDetectionCapsuleLocation = FVector(30.0f, 0.0f, 0.0f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule Radius"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule Radius"))
 	float ObstacleDetectionCapsuleRadius = 30.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule HalfHeight"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule HalfHeight"))
 	float ObstacleDetectionCapsuleHalfHeight = 30.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is the obstacle detection capsule display enabled in the game?"))
+	bool DisplayOfObstacleDetectionCapsule = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The frequency (in seconds) at which 'Constant Attempt Pursuit' will summon 'Attempted Pursuit'."))
 	float AttemptedPursuitFrequency = 3.0f;
@@ -39,6 +42,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The rate (in seconds) at which new turns occur if, when turning from an obstacle, the 'Obstacle Detection Capsule' still collides with the obstacle."))
 	float NewTurnRate = 0.25f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "20.0", ToolTip = "Smooth turning speed."))
+	float SmoothTurningSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Smooth turns after hitting an obstacle."))
+	bool TurnSmoothly = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Dormant duration."))
 	float DormantDuration = 3.0f;
@@ -92,6 +101,9 @@ public:
 	UPrimitiveComponent* ObstacleDetectionCapsule;
 
 	UPROPERTY()
+	FRotator NewRotation;
+
+	UPROPERTY()
 	bool bStartEscapeActiv;
 
 	UPROPERTY()
@@ -123,6 +135,7 @@ public:
 	FTimerHandle EscapeTimer;
 	FTimerHandle PursuitTimer;
 	FTimerHandle AnotherTurnTimer;
+	FTimerHandle SmoothTurnTimer;
 	FTimerHandle ExplosionTimer;
 	FTimerHandle DormantEndTimer;
 
@@ -142,5 +155,8 @@ protected:
 
 	UFUNCTION()
 	void AnotherTurn();
+
+	UFUNCTION()
+	void SmoothTurn();
 
 };
