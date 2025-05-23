@@ -26,7 +26,25 @@ public:
 	float ObstacleDetectionCapsuleHalfHeight = 30.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is the obstacle detection capsule display enabled in the game?"))
-	bool DisplayOfObstacleDetectionCapsule = false;
+	bool DisplayOfObstacleDetectionCapsule = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TEnumAsByte<ECollisionEnabled::Type> CollisionEnabledObstacleDetectionCapsule = ECollisionEnabled::QueryOnly;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TEnumAsByte<ECollisionChannel> CollisionObjectTypeObstacleDetectionCapsule = ECollisionChannel::ECC_WorldDynamic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TMap< TEnumAsByte<ECollisionChannel>, TEnumAsByte<ECollisionResponse>> CollisionEssentialsObstacleDetectionCapsule = {
+	{ ECC_WorldStatic, ECR_Overlap },
+	{ ECC_WorldDynamic, ECR_Ignore },
+	{ ECC_Pawn, ECR_Ignore },
+	{ ECC_Visibility, ECR_Ignore },
+	{ ECC_Camera, ECR_Ignore },
+	{ ECC_PhysicsBody, ECR_Ignore },
+	{ ECC_Vehicle, ECR_Ignore },
+	{ ECC_Destructible, ECR_Ignore },
+	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The frequency (in seconds) at which 'Constant Attempt Pursuit' will summon 'Attempted Pursuit'."))
 	float AttemptedPursuitFrequency = 3.0f;
@@ -51,6 +69,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Dormant duration."))
 	float DormantDuration = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Max walking speed of the bot when pursuing."))
+	float MaxWalkSpeed = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "1.0", ToolTip = "Escape speed multiplier relative to pursuit speed. The pursuit speed depends on the 'Character Movement' settings."))
 	float SpeedEscapeMultiplier = 1.0f;
