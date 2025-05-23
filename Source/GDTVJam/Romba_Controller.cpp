@@ -8,6 +8,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "NavigationSystem.h"
 #include "Navigation/PathFollowingComponent.h"
 
 void ARomba_Controller::OnUnPossess()
@@ -79,10 +80,10 @@ void ARomba_Controller::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedCom
 {
 	ensure(ObstacleDetectionCapsule);
 
-	if (OtherActor)
+  /*if (OtherActor)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("OVERLAP with: %s"), *OtherActor->GetName());
-	}
+		UE_LOG(LogTemp, Warning, TEXT("OVERLAP with: %s"), *OtherActor->GetName());
+	}*/
 
 	if (!bIsPursuit)
 	{
@@ -204,23 +205,44 @@ void ARomba_Controller::AttemptedPursuit()
 					GetPawn()->Tags.Remove("Escape");
 				}
 
+				if (ActivateTimerBeforeExplosionDuringPursuit)
+				{
+					ActivateTimerBeforeExplosion();
+					ActivateTimerBeforeExplosionDuringPursuit = false;
+				}
+
+				ensure(ActivateTimerBeforeExplosionDuringPursuit);
+
 				bIsPursuit = true;
 				bIsEscape = false;
 				bStartPursuit = false;
 
 				UKismetSystemLibrary::K2_ClearTimerHandle(this, EscapeTimer);
-				UKismetSystemLibrary::K2_ClearTimerHandle(this, PursuitTimer);
 
 				FAIMoveRequest MoveRequest;
-				MoveRequest.SetGoalActor(UGameplayStatics::GetPlayerPawn(this, 0));
-				MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
-
 				FNavPathSharedPtr NavPath;
-				MoveTo(MoveRequest, &NavPath);
+				FVector ProjectedLocation = GetPawn()->GetActorLocation();
+				ANavigationData* UseNavData = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld())->GetDefaultNavDataInstance();
+				TSubclassOf<UNavigationQueryFilter> NavigationQueryFilter;
 
-				if (ActivateTimerBeforeExplosionDuringPursuit)
-				{		
-					ActivateTimerBeforeExplosion();
+				if (UGameplayStatics::GetPlayerPawn(this, 0))
+				{
+					if (UNavigationSystemV1::K2_ProjectPointToNavigation(this, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation(), ProjectedLocation, UseNavData, NavigationQueryFilter))
+					{
+						UKismetSystemLibrary::K2_ClearTimerHandle(this, PursuitTimer);
+						MoveRequest.SetGoalActor(UGameplayStatics::GetPlayerPawn(this, 0));
+						MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
+						MoveTo(MoveRequest, &NavPath);
+						bIsPursuitEvenIfTargetIsNotDetected = false;
+					}
+					else if (bPursuitEvenIfTargetIsNotDetected)
+					{
+						FVector PlayerLocation = { UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation().X, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation().Y, GetPawn()->GetActorLocation().Z };
+						MoveRequest.SetGoalLocation(PlayerLocation);
+						MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
+						MoveTo(MoveRequest, &NavPath);
+						bIsPursuitEvenIfTargetIsNotDetected = true;
+					}
 				}
 			}
 		}
@@ -321,9 +343,14 @@ void ARomba_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollo
 
 	if (Result.IsSuccess())
 	{
-		if (ExplodeIfApproached)
+		if (ExplodeIfApproached && !bIsPursuitEvenIfTargetIsNotDetected)
 		{
 			Explosion();
+		}
+		else if (bIsPursuitEvenIfTargetIsNotDetected)
+		{
+			bStartPursuit = true;
+			GetWorldTimerManager().SetTimer(PursuitTimer, this, &ARomba_Controller::AttemptedPursuit, AttemptedPursuitFrequency, true);
 		}
 	}
 	else if (Result.IsFailure())
