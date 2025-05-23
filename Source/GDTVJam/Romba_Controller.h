@@ -16,14 +16,35 @@ class GDTVJAM_API ARomba_Controller : public AAIController
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Relative Obstacle Detection Capsule Location"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Relative Obstacle Detection Capsule Location"))
 	FVector RelativeObstacleDetectionCapsuleLocation = FVector(30.0f, 0.0f, 0.0f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule Radius"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule Radius"))
 	float ObstacleDetectionCapsuleRadius = 30.0f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule HalfHeight"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Obstacle Detection Capsule HalfHeight"))
 	float ObstacleDetectionCapsuleHalfHeight = 30.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is the obstacle detection capsule display enabled in the game?"))
+	bool DisplayOfObstacleDetectionCapsule = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TEnumAsByte<ECollisionEnabled::Type> CollisionEnabledObstacleDetectionCapsule = ECollisionEnabled::QueryOnly;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TEnumAsByte<ECollisionChannel> CollisionObjectTypeObstacleDetectionCapsule = ECollisionChannel::ECC_WorldDynamic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsuleMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	TMap< TEnumAsByte<ECollisionChannel>, TEnumAsByte<ECollisionResponse>> CollisionEssentialsObstacleDetectionCapsule = {
+	{ ECC_WorldStatic, ECR_Overlap },
+	{ ECC_WorldDynamic, ECR_Ignore },
+	{ ECC_Pawn, ECR_Ignore },
+	{ ECC_Visibility, ECR_Ignore },
+	{ ECC_Camera, ECR_Ignore },
+	{ ECC_PhysicsBody, ECR_Ignore },
+	{ ECC_Vehicle, ECR_Ignore },
+	{ ECC_Destructible, ECR_Ignore },
+	};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The frequency (in seconds) at which 'Constant Attempt Pursuit' will summon 'Attempted Pursuit'."))
 	float AttemptedPursuitFrequency = 3.0f;
@@ -40,11 +61,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The rate (in seconds) at which new turns occur if, when turning from an obstacle, the 'Obstacle Detection Capsule' still collides with the obstacle."))
 	float NewTurnRate = 0.25f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "20.0", ToolTip = "Smooth turning speed."))
+	float SmoothTurningSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TurnMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Smooth turns after hitting an obstacle."))
+	bool TurnSmoothly = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Dormant duration."))
 	float DormantDuration = 3.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "1.0", ToolTip = ""))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Max walking speed of the bot when pursuing."))
+	float MaxWalkSpeed = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ClampMin = "0.0", ClampMax = "1.0", ToolTip = "Escape speed multiplier relative to pursuit speed. The pursuit speed depends on the 'Character Movement' settings."))
 	float SpeedEscapeMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "When a player gets into the radius, the bot will be considered to have caught up with the player."))
+	float PursuitEndRadius = 5.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StateMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is it possible to activate the escape state. If false the function 'StartEscape' will not work."))
 	bool bEscapePossible = true;
@@ -73,6 +106,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, the bot will continue with Escape or Pursuit after Dormant."))
 	bool bContinueMovingAfterDormant = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The next call to 'Attempted Pursuit' will start the Pursuit. When pursuit starts, this variable is set to false."))
+	bool bStartPursuit = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ExplosionMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The time (in seconds) after which the 'ActivateTimer Before Explosion' function will call 'Explosion'."))
 	float DelayBeforeExplosion = 10.0f;
 
@@ -80,10 +116,13 @@ public:
 	bool ActivateTimerBeforeExplosionDuringPursuit = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ExplosionMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, when the bot chases the player and catches up with him, the 'Explosion' function will be called."))
-	bool ExplodeIfCaught = true;
+	bool ExplodeIfApproached = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ObstacleDetectionCapsule, meta = (AllowPrivateAccess = "true", ToolTip = "Collision capsule created when moving into a bot. The overlay of this capsule is the trigger for turning."))
 	UPrimitiveComponent* ObstacleDetectionCapsule;
+
+	UPROPERTY()
+	FRotator NewRotation;
 
 	UPROPERTY()
 	bool bStartEscapeActiv;
@@ -106,7 +145,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, stops the bot for a certain amount of time. Until the dormant time expires, Escape or Pursuit will not be performed. Related Variables: Dormant Duration, Continue Moving After Dormant, Dormant Possible, Is Dormant."))
 	void StartDormant();
 
-	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, activates a timer after which the 'Explosion' function will be called. Related Variables: Time Before Explosion, Activate Timer Before Explosion During Pursuit, Explode If Caught, Explosion Possible, Is Explosion."))
+	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "When called, activates a timer after which the 'Explosion' function will be called. Related Variables: Time Before Explosion, Activate Timer Before Explosion During Pursuit, Explode If Approached, Explosion Possible, Is Explosion."))
 	void ActivateTimerBeforeExplosion();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Moth", meta = (ToolTip = "When called, by default, logs 'Boom' and destroys the bot. You can override this functionality with 'Event Explosion'.Related Variables: Explosion Possible, Is Explosion."))
@@ -117,6 +156,7 @@ public:
 	FTimerHandle EscapeTimer;
 	FTimerHandle PursuitTimer;
 	FTimerHandle AnotherTurnTimer;
+	FTimerHandle SmoothTurnTimer;
 	FTimerHandle ExplosionTimer;
 	FTimerHandle DormantEndTimer;
 
@@ -136,5 +176,8 @@ protected:
 
 	UFUNCTION()
 	void AnotherTurn();
+
+	UFUNCTION()
+	void SmoothTurn();
 
 };

@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 
 void ARomba_Controller::OnUnPossess()
@@ -26,6 +27,9 @@ void ARomba_Controller::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	UCharacterMovementComponent * CharacterMovementComponent = Cast<ACharacter>(InPawn)->GetCharacterMovement();
+	CharacterMovementComponent->MaxWalkSpeed = MaxWalkSpeed;
+
 	UCapsuleComponent *CapsuleComponent = Cast<ACharacter>(InPawn)->GetCapsuleComponent();
     FRotator RelativeRot = CapsuleComponent->GetRelativeRotation();
 	FRotator RelativeRotation = CapsuleComponent->GetRelativeRotation();
@@ -36,13 +40,27 @@ void ARomba_Controller::OnPossess(APawn* InPawn)
 	
 	if (CollisionDetectionCapsule)
 	{
+		TArray<TEnumAsByte<ECollisionChannel>> CollisionChannel;
+		TArray<TEnumAsByte<ECollisionResponse>> CollisionResponse;
+		int32 ArrayIndex = 0;
+
+		CollisionEssentialsObstacleDetectionCapsule.GenerateKeyArray(CollisionChannel);
+		CollisionEssentialsObstacleDetectionCapsule.GenerateValueArray(CollisionResponse);
+
 		CollisionDetectionCapsule->RegisterComponent();
 		CollisionDetectionCapsule->AttachToComponent(CapsuleComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		CollisionDetectionCapsule->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Ignore);
-		CollisionDetectionCapsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		CollisionDetectionCapsule->SetCollisionEnabled(CollisionEnabledObstacleDetectionCapsule);
+		CollisionDetectionCapsule->SetCollisionObjectType(CollisionObjectTypeObstacleDetectionCapsule);
+
+		for (TEnumAsByte<ECollisionChannel> ArrayElement : CollisionChannel)
+		{
+			CollisionDetectionCapsule->SetCollisionResponseToChannel(ArrayElement, CollisionResponse[ArrayIndex]);
+			ArrayIndex++;
+		}
+		
 		CollisionDetectionCapsule->SetRelativeTransform(CapsuleTransform);
 		CollisionDetectionCapsule->SetCapsuleSize(ObstacleDetectionCapsuleRadius, ObstacleDetectionCapsuleHalfHeight);
-		CollisionDetectionCapsule->SetHiddenInGame(false, false);  //Debug
+		CollisionDetectionCapsule->SetHiddenInGame(!DisplayOfObstacleDetectionCapsule, false);  //Debug
 		ObstacleDetectionCapsule = CollisionDetectionCapsule;
 
 		FComponentBeginOverlapSignature BeginOverlapSignature = CollisionDetectionCapsule->OnComponentBeginOverlap;
@@ -51,7 +69,10 @@ void ARomba_Controller::OnPossess(APawn* InPawn)
 		CollisionDetectionCapsule->OnComponentBeginOverlap.Add(OverlapDelegate);
 	}
 
-
+	if (!GetPawn()->Tags.Contains("Moth"))
+	{
+		GetPawn()->Tags.Add("Moth");
+	}
 }
 
 void ARomba_Controller::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -65,17 +86,26 @@ void ARomba_Controller::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedCom
 
 	if (!bIsPursuit)
 	{
-
 		if (GetPawn())
 		{
-			FRotator NewRotation(0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f);
-			GetPawn()->SetActorRotation(NewRotation);
-			TArray<AActor*> OverlappingActors;
-			ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+			NewRotation = { 0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f };
 
-			if (!OverlappingActors.IsEmpty())
+			if (TurnSmoothly)
 			{
-				GetWorldTimerManager().SetTimer(AnotherTurnTimer, this, &ARomba_Controller::AnotherTurn, NewTurnRate, false);
+				GetWorldTimerManager().SetTimer(SmoothTurnTimer, this, &ARomba_Controller::SmoothTurn, 0.01f, true);
+			}
+			else
+			{
+				TArray<AActor*> OverlappingActors;
+
+				GetPawn()->SetActorRotation(NewRotation);
+
+				ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+
+				if (!OverlappingActors.IsEmpty())
+				{
+					GetWorldTimerManager().SetTimer(AnotherTurnTimer, this, &ARomba_Controller::AnotherTurn, NewTurnRate, false);
+				}
 			}
 		}
 	}
@@ -90,26 +120,52 @@ void ARomba_Controller::AnotherTurn()
 	}
 }
 
+void ARomba_Controller::SmoothTurn()
+{
+	if (UKismetMathLibrary::NearlyEqual_FloatFloat(UKismetMathLibrary::ClampAxis(NewRotation.Yaw), UKismetMathLibrary::ClampAxis(GetPawn()->GetActorRotation().Yaw), 0.01f))
+	{
+		TArray<AActor*> OverlappingActors;
+		ObstacleDetectionCapsule->GetOverlappingActors(OverlappingActors);
+
+		if (!OverlappingActors.IsEmpty())
+		{
+			NewRotation = { 0.f, GetPawn()->GetActorRotation().Yaw + FMath::FRandRange(MinimumTurningDegree, MaximumTurningDegree), 0.f };
+		}
+		else
+		{
+			UKismetSystemLibrary::K2_ClearTimerHandle(this, SmoothTurnTimer);
+		}
+	}
+	else
+	{
+		GetPawn()->SetActorRotation(FMath::RInterpTo(GetPawn()->GetActorRotation(), NewRotation, UGameplayStatics::GetWorldDeltaSeconds(this), SmoothTurningSpeed));
+	}
+}
+
 void ARomba_Controller::StartEscape()
 {
 	if (bEscapePossible)
 	{
 		if (!bIsDormant)
 		{
+			if (!GetPawn()->Tags.Contains("Escape"))
+			{
+				GetPawn()->Tags.Add("Escape");
+				GetPawn()->Tags.Remove("Pursuit");
+			}
+
 			bIsEscape = true;
 			bIsPursuit = false;
 
 			StopMovement();
 			UKismetSystemLibrary::K2_ClearTimerHandle(this, PursuitTimer);
 
-			GetWorldTimerManager().SetTimer(EscapeTimer, this, &ARomba_Controller::Escape, 0.02f, true);
+			GetWorldTimerManager().SetTimer(EscapeTimer, this, &ARomba_Controller::Escape, 0.01f, true);
 		}
 		else
 		{
 			bStartEscapeActiv = true;
 			bAttemptedPursuitActiv = false;
-			//bConstantAttemptPursuitActiv = false;
-
 		}
 	}
 }
@@ -140,22 +196,30 @@ void ARomba_Controller::AttemptedPursuit()
 	{
 		if (!bIsDormant)
 		{
-			if (UKismetMathLibrary::RandomBoolWithWeight(PursuitChance / 100.f))
+			if (UKismetMathLibrary::RandomBoolWithWeight(PursuitChance / 100.f) || bStartPursuit)
 			{
+				if (!GetPawn()->Tags.Contains("Pursuit"))
+				{
+					GetPawn()->Tags.Add("Pursuit");
+					GetPawn()->Tags.Remove("Escape");
+				}
+
 				bIsPursuit = true;
 				bIsEscape = false;
+				bStartPursuit = false;
 
 				UKismetSystemLibrary::K2_ClearTimerHandle(this, EscapeTimer);
+				UKismetSystemLibrary::K2_ClearTimerHandle(this, PursuitTimer);
 
 				FAIMoveRequest MoveRequest;
 				MoveRequest.SetGoalActor(UGameplayStatics::GetPlayerPawn(this, 0));
-				MoveRequest.SetAcceptanceRadius(0.f);
+				MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
 
 				FNavPathSharedPtr NavPath;
 				MoveTo(MoveRequest, &NavPath);
 
 				if (ActivateTimerBeforeExplosionDuringPursuit)
-				{
+				{		
 					ActivateTimerBeforeExplosion();
 				}
 			}
@@ -174,6 +238,11 @@ void ARomba_Controller::StartDormant()
 	{		
 		if (!bIsDormant)
 		{
+			if (!GetPawn()->Tags.Contains("Dormant"))
+			{
+				GetPawn()->Tags.Add("Dormant");
+			}
+
 			bStartEscapeActiv = bIsEscape;
 			bAttemptedPursuitActiv = bIsPursuit;
 
@@ -188,6 +257,11 @@ void ARomba_Controller::StartDormant()
 		}
 		else
 		{
+			if (GetPawn()->Tags.Contains("Dormant"))
+			{
+				GetPawn()->Tags.Remove("Dormant");
+			}
+
 			bIsDormant = false;
 
 			if (bContinueMovingAfterDormant)
@@ -220,6 +294,12 @@ void ARomba_Controller::ActivateTimerBeforeExplosion()
 {
 	if (bExplosionPossible)
 	{
+		if (!GetPawn()->Tags.Contains("Explosion"))
+		{
+
+			GetPawn()->Tags.Add("Explosion");
+		}
+
 		bIsExplosion = true;
 		GetWorldTimerManager().SetTimer(ExplosionTimer, this, &ARomba_Controller::Explosion, DelayBeforeExplosion, false);
 	}
@@ -230,6 +310,7 @@ void ARomba_Controller::Explosion_Implementation()
 	if (bExplosionPossible)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Boom"));
+		UKismetSystemLibrary::K2_ClearTimerHandle(this, ExplosionTimer);
 		GetPawn()->Destroy(false, true);
 	}
 }
@@ -240,15 +321,14 @@ void ARomba_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollo
 
 	if (Result.IsSuccess())
 	{
-		if (ExplodeIfCaught)
+		if (ExplodeIfApproached)
 		{
 			Explosion();
 		}
 	}
 	else if (Result.IsFailure())
 	{
-		//PursuitChance = 100.f;
-		//AttemptedPursuit();
+		bStartPursuit = true;
+		GetWorldTimerManager().SetTimer(PursuitTimer, this, &ARomba_Controller::AttemptedPursuit, AttemptedPursuitFrequency, true);
 	}
-
 }
