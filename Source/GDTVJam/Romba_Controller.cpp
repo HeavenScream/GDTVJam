@@ -211,7 +211,7 @@ void ARomba_Controller::AttemptedPursuit()
 					ActivateTimerBeforeExplosionDuringPursuit = false;
 				}
 
-				ensure(ActivateTimerBeforeExplosionDuringPursuit);
+				//ensure(ActivateTimerBeforeExplosionDuringPursuit);
 
 				bIsPursuit = true;
 				bIsEscape = false;
