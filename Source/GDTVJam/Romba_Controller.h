@@ -79,6 +79,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "When a player gets into the radius, the bot will be considered to have caught up with the player."))
 	float PursuitEndRadius = 5.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, the bot will continue with Escape or Pursuit after Dormant."))
+	bool bContinueMovingAfterDormant = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
+	bool bPursuitEvenIfTargetIsNotDetected = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The next call to 'Attempted Pursuit' will start the Pursuit. When pursuit starts, this variable is set to false."))
+	bool bStartPursuit = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = StateMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Is it possible to activate the escape state. If false the function 'StartEscape' will not work."))
 	bool bEscapePossible = true;
 
@@ -103,12 +112,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = StateMoth, meta = (AllowPrivateAccess = "true", ToolTip = "Bot in explosion state?"))
 	bool bIsExplosion = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, the bot will continue with Escape or Pursuit after Dormant."))
-	bool bContinueMovingAfterDormant = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The next call to 'Attempted Pursuit' will start the Pursuit. When pursuit starts, this variable is set to false."))
-	bool bStartPursuit = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ExplosionMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The time (in seconds) after which the 'ActivateTimer Before Explosion' function will call 'Explosion'."))
 	float DelayBeforeExplosion = 10.0f;
 
@@ -132,6 +135,9 @@ public:
 
 	UPROPERTY()
 	bool bAttemptedPursuitActiv;
+
+	UPROPERTY()
+	bool bIsPursuitEvenIfTargetIsNotDetected = false;
 
 	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "The bot starts moving straight, turning when it hits an obstacle. Related Variables: Relative Capsule Location, Radius Casule, Half Height Casule, Speed Escape Multiplier, Minimum Turning Degree, Maximum Turning Degree, New Turn Rate, Escape Possible, Is Escape."))
 	void StartEscape();
