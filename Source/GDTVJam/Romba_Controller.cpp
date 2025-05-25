@@ -211,7 +211,6 @@ void ARomba_Controller::AttemptedPursuit()
 					ActivateTimerBeforeExplosionDuringPursuit = false;
 				}
 
-				ensure(ActivateTimerBeforeExplosionDuringPursuit);
 
 				bIsPursuit = true;
 				bIsEscape = false;
@@ -233,15 +232,6 @@ void ARomba_Controller::AttemptedPursuit()
 						MoveRequest.SetGoalActor(UGameplayStatics::GetPlayerPawn(this, 0));
 						MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
 						MoveTo(MoveRequest, &NavPath);
-						bIsPursuitEvenIfTargetIsNotDetected = false;
-					}
-					else if (bPursuitEvenIfTargetIsNotDetected)
-					{
-						FVector PlayerLocation = { UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation().X, UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation().Y, GetPawn()->GetActorLocation().Z };
-						MoveRequest.SetGoalLocation(PlayerLocation);
-						MoveRequest.SetAcceptanceRadius(PursuitEndRadius);
-						MoveTo(MoveRequest, &NavPath);
-						bIsPursuitEvenIfTargetIsNotDetected = true;
 					}
 				}
 			}
@@ -343,14 +333,9 @@ void ARomba_Controller::OnMoveCompleted(FAIRequestID RequestID, const FPathFollo
 
 	if (Result.IsSuccess())
 	{
-		if (ExplodeIfApproached && !bIsPursuitEvenIfTargetIsNotDetected)
+		if (ExplodeIfApproached)
 		{
 			Explosion();
-		}
-		else if (bIsPursuitEvenIfTargetIsNotDetected)
-		{
-			bStartPursuit = true;
-			GetWorldTimerManager().SetTimer(PursuitTimer, this, &ARomba_Controller::AttemptedPursuit, AttemptedPursuitFrequency, true);
 		}
 	}
 	else if (Result.IsFailure())

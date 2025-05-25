@@ -82,9 +82,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "If true, the bot will continue with Escape or Pursuit after Dormant."))
 	bool bContinueMovingAfterDormant = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = ""))
-	bool bPursuitEvenIfTargetIsNotDetected = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MoveMoth, meta = (AllowPrivateAccess = "true", ToolTip = "The next call to 'Attempted Pursuit' will start the Pursuit. When pursuit starts, this variable is set to false."))
 	bool bStartPursuit = false;
 
@@ -135,9 +132,6 @@ public:
 
 	UPROPERTY()
 	bool bAttemptedPursuitActiv;
-
-	UPROPERTY()
-	bool bIsPursuitEvenIfTargetIsNotDetected = false;
 
 	UFUNCTION(BlueprintCallable, Category = "Moth", meta = (ToolTip = "The bot starts moving straight, turning when it hits an obstacle. Related Variables: Relative Capsule Location, Radius Casule, Half Height Casule, Speed Escape Multiplier, Minimum Turning Degree, Maximum Turning Degree, New Turn Rate, Escape Possible, Is Escape."))
 	void StartEscape();
